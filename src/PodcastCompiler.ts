@@ -117,8 +117,9 @@ class PodcastCompiler {
 
         const url = `${host}/ep/${id}.mp3`;
         const pubDate = formatPubDate(new Date(date));
+        const audioFile = path.join(this.audioPath, `${id}.mp3`);
 
-        const audioInfo = (await ffprobe(this.audioPath, { path: ffprobeStatic.path })).streams[0];
+        const audioInfo = (await ffprobe(audioFile, { path: ffprobeStatic.path })).streams[0];
         const type = `${audioInfo.codec_type}/${audioInfo.codec_name}`;
         const bytes = (await fs.stat(this.audioPath)).size;
 
