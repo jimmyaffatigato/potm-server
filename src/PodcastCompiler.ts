@@ -2,30 +2,18 @@ import { JSDOM } from "jsdom";
 import ffprobe from "ffprobe";
 import ffprobeStatic from "ffprobe-static";
 import path = require("path");
-import nodefs = require("fs");
-import { promisify } from "util";
-
-const PACKAGE = JSON.parse(nodefs.readFileSync(path.join(__dirname, "..", "package.json"), "utf-8")) as {
-    version: string;
-};
-
-const VERSION = PACKAGE.version;
-
-const fs = {
-    readFile: promisify(nodefs.readFile),
-    writeFile: promisify(nodefs.writeFile),
-    stat: promisify(nodefs.stat),
-};
-
-const EPISODESFOLDER = path.resolve(__dirname, "episodes");
+import fs from "./fs-promise";
+import { formatHTML, formatDuration, formatPubDate } from "./podcast-util";
 
 class PodcastCompiler {
     dom: JSDOM;
     document: Document;
     host: string;
+    audioPath: string;
 
-    constructor(host: string) {
+    constructor(host: string, audioPath: string) {
         this.host = host;
+        this.audioPath = audioPath;
         this.dom = new JSDOM(
             `<rss xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:content="http://purl.org/rss/1.0/modules/content/" xmlns:atom="http://www.w3.org/2005/Atom" version="2.0" xmlns:itunes="http://www.itunes.com/dtds/podcast-1.0.dtd"></rss>`,
             { contentType: "text/xml" }
@@ -41,22 +29,34 @@ class PodcastCompiler {
         const text = await fs.readFile(optionsFile, "utf-8");
         const data = JSON.parse(text) as PodcastData;
         const { feed, items } = data;
-        const { title, copyright, webMaster, links } = feed;
-        const description = await fs.readFile(path.join(__dirname, "description.html"), "utf-8");
+        const { title, description, copyright, webMaster, siteURL, links } = feed;
 
-        const patreonLink = "https://patreon.com/Multiverse_Pod";
+        console.log(`Compiling ${title} RSS feed using hostname ${host}`);
+
+        const descriptionDOM = new JSDOM(`<div></div>`);
+        const descriptionDocument = descriptionDOM.window.document;
+        const div = descriptionDocument.getElementsByTagName("div")[0];
+
+        div.appendChild(this.newTag("p", description));
+        const linksElement = document.createElement("p");
+        div.appendChild(linksElement);
+        links.forEach((c) => {
+            linksElement.appendChild(document.createTextNode(c));
+            linksElement.appendChild(document.createElement("br"));
+        });
+
         const thumbnailURL = `${host}/s1-thumbnail.jpg`;
 
         const channelNode = document.createElement("channel");
         rssNode.appendChild(channelNode);
 
         channelNode.appendChild(this.newTag("title", title));
-        channelNode.appendChild(this.newTag("description", flattenXML(description), true));
+        channelNode.appendChild(this.newTag("description", formatHTML(div.innerHTML), true));
         channelNode.appendChild(this.newTag("copyright", copyright, true));
         channelNode.appendChild(this.newTag("language", "en"));
-        channelNode.appendChild(this.newTag("generator", `POTM Server v${VERSION}`));
-        channelNode.appendChild(this.newTag("link", patreonLink));
-        channelNode.appendChild(this.newTag("docs", patreonLink));
+        channelNode.appendChild(this.newTag("generator", `POTM Server ${process.version}`));
+        channelNode.appendChild(this.newTag("link", siteURL));
+        channelNode.appendChild(this.newTag("docs", siteURL));
         channelNode.appendChild(this.newTag("managingEditor", webMaster));
         channelNode.appendChild(this.newTag("itunes:type", "serial"));
 
@@ -68,7 +68,7 @@ class PodcastCompiler {
         channelNode.appendChild(imageElement);
         imageElement.appendChild(this.newTag("url", thumbnailURL));
         imageElement.appendChild(this.newTag("title", title));
-        imageElement.appendChild(this.newTag("link", patreonLink));
+        imageElement.appendChild(this.newTag("link", siteURL));
 
         const itunesOwner = document.createElement("itunes:owner");
         channelNode.appendChild(itunesOwner);
@@ -118,24 +118,21 @@ class PodcastCompiler {
         const url = `${host}/ep/${id}.mp3`;
         const pubDate = formatPubDate(new Date(date));
 
-        const localAudioPath = path.join(EPISODESFOLDER, `${id}.mp3`);
-        const audioInfo = (await ffprobe(localAudioPath, { path: ffprobeStatic.path })).streams[0];
+        const audioInfo = (await ffprobe(this.audioPath, { path: ffprobeStatic.path })).streams[0];
         const type = `${audioInfo.codec_type}/${audioInfo.codec_name}`;
-        const bytes = (await fs.stat(localAudioPath)).size;
+        const bytes = (await fs.stat(this.audioPath)).size;
 
         const itemElement = document.createElement("item");
-
         itemElement.appendChild(this.newTag("title", `S${season} E${episode} - ${title}`));
         itemElement.appendChild(this.newTag("itunes:title", title));
         itemElement.appendChild(this.newTag("pubDate", pubDate));
-        itemElement.appendChild(
-            this.newTag("description", div.innerHTML.replace(/&gt;/g, ">").replace(/&lt;/g, "<"), true)
-        );
+        itemElement.appendChild(this.newTag("description", formatHTML(div.innerHTML), true));
         itemElement.appendChild(this.newTag("itunes:duration", formatDuration(audioInfo.duration)));
         itemElement.appendChild(this.newTag("itunes:author", "Pods of the Multiverse"));
         itemElement.appendChild(this.newTag("itunes:explicit", "no"));
         itemElement.appendChild(this.newTag("itunes:episodeType", "full"));
         itemElement.appendChild(this.newTag("itunes:summary", description));
+
         const itunesImage = document.createElement("itunes:image");
         itemElement.appendChild(itunesImage);
         itunesImage.setAttribute("href", thumbnailURL);
@@ -174,9 +171,9 @@ export default PodcastCompiler;
 interface PodcastData {
     feed: {
         title: string;
+        description: string;
         copyright: string;
-        feedUrl: string;
-        siteUrl: string;
+        siteURL: string;
         webMaster: string;
         links: string[];
     };
@@ -192,39 +189,4 @@ interface EpisodeData {
     id: string;
     cast: string[];
     credits: string[];
-}
-
-function formatDuration(num: number): string {
-    const hours = Math.floor(num / 3600);
-    const minutes = Math.floor((num % 3600) / 60);
-    const seconds = Math.floor(num % 60);
-    return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
-}
-
-function flattenXML(text: string): string {
-    return text.replace(/([\r\n]| {4,})/g, "");
-}
-
-function formatPubDate(date: Date): string {
-    const weekday = numToDay(date.getDay());
-    const monthDate = date.getDate();
-    const month = numToMonth(date.getMonth());
-    const year = date.getFullYear();
-    const hours = String(date.getHours()).padStart(2, "0");
-    const minutes = String(date.getMinutes()).padStart(2, "0");
-    const seconds = String(date.getSeconds()).padStart(2, "0");
-    const offset = date.getTimezoneOffset();
-    return `${weekday}, ${monthDate} ${month} ${year} ${hours}:${minutes}:${seconds} ${offset >= 0 ? "+" : ""}${String(
-        offset
-    ).padStart(4, "0")}`;
-}
-
-function numToDay(num: number) {
-    const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-    return days[num];
-}
-
-function numToMonth(num: number) {
-    const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-    return months[num];
 }
