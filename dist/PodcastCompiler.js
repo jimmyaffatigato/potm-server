@@ -94,7 +94,8 @@ class PodcastCompiler {
         });
         const url = `${host}/ep/${id}.mp3`;
         const pubDate = (0, podcast_util_1.formatPubDate)(new Date(date));
-        const audioInfo = (await (0, ffprobe_1.default)(this.audioPath, { path: ffprobe_static_1.default.path })).streams[0];
+        const audioFile = path.join(this.audioPath, `${id}.mp3`);
+        const audioInfo = (await (0, ffprobe_1.default)(audioFile, { path: ffprobe_static_1.default.path })).streams[0];
         const type = `${audioInfo.codec_type}/${audioInfo.codec_name}`;
         const bytes = (await fs_promise_1.default.stat(this.audioPath)).size;
         const itemElement = document.createElement("item");
