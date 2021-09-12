@@ -41,7 +41,7 @@ class PodcastServer {
 
 export default PodcastServer;
 
-interface ServerOptions {
+export interface ServerOptions {
     host: string;
     url: string;
     port: number;

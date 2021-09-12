@@ -1,16 +1,14 @@
-import PodcastServer from "./PodcastServer";
+import PodcastServer, { ServerOptions } from "./PodcastServer";
+import path from "path";
+import fs from "./fs-promise";
 
-const args = process.argv.slice(2);
-
-if (args.length > 0) {
-    const command = args[0];
-    if (command == "start") {
-        const host = args[1];
-        new PodcastServer({ port: 80, host, audioPath: "episodes", url: "/rss" });
-    }
-    if (command == "version") {
-        console.log(`${process.title} ${process.version}`);
-    }
-}
+loadSettings(path.join(__dirname, "settings.json")).then((settings) => {
+    new PodcastServer(settings);
+});
 
 export default {};
+
+async function loadSettings(path: string): Promise<ServerOptions> {
+    const text = await fs.readFile(path, "utf-8");
+    return JSON.parse(text) as ServerOptions;
+}

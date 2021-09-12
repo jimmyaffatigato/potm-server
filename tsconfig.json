@@ -4,6 +4,7 @@
     "lib": ["ES2020", "dom"],
     "module": "commonjs",
     "esModuleInterop": true,
-    "outDir": "dist"
+    "outDir": "dist",
+    "resolveJsonModule": true
   }
 }
