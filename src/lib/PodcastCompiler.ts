@@ -9,16 +9,30 @@ class PodcastCompiler {
     dom: JSDOM;
     document: Document;
 
-    constructor(host: string, episodePath: string, rssURL: string, episodeURL: string, artURL: string) {
+    constructor(
+        host: string,
+        rssPath: string,
+        episodePath: string,
+        rssURL: string,
+        episodeURL: string,
+        artURL: string
+    ) {
         this.dom = new JSDOM(
             `<rss xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:content="http://purl.org/rss/1.0/modules/content/" xmlns:atom="http://www.w3.org/2005/Atom" version="2.0" xmlns:itunes="http://www.itunes.com/dtds/podcast-1.0.dtd"></rss>`,
             { contentType: "text/xml" }
         );
         this.document = this.dom.window.document;
-        this.buildRSS(host, episodePath, rssURL, episodeURL, artURL);
+        this.buildRSS(host, rssPath, episodePath, rssURL, episodeURL, artURL);
     }
 
-    async buildRSS(host: string, episodePath: string, rssURL: string, episodeURL: string, artURL: string) {
+    async buildRSS(
+        host: string,
+        rssPath: string,
+        episodePath: string,
+        rssURL: string,
+        episodeURL: string,
+        artURL: string
+    ) {
         const document = this.document;
         const rssNode = document.getElementsByTagName("rss")[0];
 
@@ -155,11 +169,8 @@ class PodcastCompiler {
             }
             return element;
         }
-    }
-
-    async render(rssFilePath: string) {
         const podcastDeclaration = `<?xml version="1.0" encoding="UTF-8"?>`;
-        fs.writeFile(rssFilePath, podcastDeclaration + this.dom.serialize());
+        fs.writeFile(rssPath, podcastDeclaration + this.dom.serialize());
     }
 }
 

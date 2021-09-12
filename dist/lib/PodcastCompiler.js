@@ -10,12 +10,12 @@ const ffprobe_static_1 = __importDefault(require("ffprobe-static"));
 const fs_promise_1 = __importDefault(require("./fs-promise"));
 const path = require("path");
 class PodcastCompiler {
-    constructor(host, episodePath, rssURL, episodeURL, artURL) {
+    constructor(host, rssPath, episodePath, rssURL, episodeURL, artURL) {
         this.dom = new jsdom_1.JSDOM(`<rss xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:content="http://purl.org/rss/1.0/modules/content/" xmlns:atom="http://www.w3.org/2005/Atom" version="2.0" xmlns:itunes="http://www.itunes.com/dtds/podcast-1.0.dtd"></rss>`, { contentType: "text/xml" });
         this.document = this.dom.window.document;
-        this.buildRSS(host, episodePath, rssURL, episodeURL, artURL);
+        this.buildRSS(host, rssPath, episodePath, rssURL, episodeURL, artURL);
     }
-    async buildRSS(host, episodePath, rssURL, episodeURL, artURL) {
+    async buildRSS(host, rssPath, episodePath, rssURL, episodeURL, artURL) {
         const document = this.document;
         const rssNode = document.getElementsByTagName("rss")[0];
         const optionsFile = path.join(__dirname, "..", "podcast", "podcast.json");
@@ -129,10 +129,8 @@ class PodcastCompiler {
             }
             return element;
         }
-    }
-    async render(rssFilePath) {
         const podcastDeclaration = `<?xml version="1.0" encoding="UTF-8"?>`;
-        fs_promise_1.default.writeFile(rssFilePath, podcastDeclaration + this.dom.serialize());
+        fs_promise_1.default.writeFile(rssPath, podcastDeclaration + this.dom.serialize());
     }
 }
 exports.default = PodcastCompiler;

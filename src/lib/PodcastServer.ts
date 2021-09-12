@@ -2,7 +2,7 @@ import express = require("express");
 import path = require("path");
 import PodcastCompiler from "./PodcastCompiler";
 
-const rssFilePath = path.resolve(__dirname, "..", "podcast", "rss.xml");
+const rssPath = path.resolve(__dirname, "..", "podcast", "rss.xml");
 const episodePath = path.resolve(__dirname, "..", "podcast", "episodes");
 const artPath = path.resolve(__dirname, "..", "podcast");
 
@@ -12,10 +12,10 @@ class PodcastServer {
 
     constructor(options: ServerOptions) {
         const { port, host, rssURL, episodeURL, artURL } = options;
-        this.compiler = new PodcastCompiler(host, episodePath, rssURL, episodeURL, artURL);
+        this.compiler = new PodcastCompiler(host, rssPath, episodePath, rssURL, episodeURL, artURL);
 
         this.router.get(rssURL, (req, res) => {
-            res.sendFile(rssFilePath);
+            res.sendFile(rssPath);
         });
         this.router.get(`${episodeURL}/:episodeID.mp3`, (req, res) => {
             const { episodeID } = req.params;
@@ -27,11 +27,8 @@ class PodcastServer {
             const episodeFilePath = path.resolve(artPath, `${file}.jpg`);
             res.sendFile(episodeFilePath);
         });
-
-        this.compiler.render(rssFilePath).then(() => {
-            this.router.listen(port, () => {
-                console.log(`RSS server open at ${rssURL} on ${port}`);
-            });
+        this.router.listen(port, () => {
+            console.log(`RSS server open at ${rssURL} on ${port}`);
         });
     }
 }
