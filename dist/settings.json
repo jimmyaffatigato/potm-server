@@ -1,0 +1,7 @@
+{
+  "host": "http://multiversepod.com",
+  "rssURL": "/rss",
+  "episodeURL": "/ep",
+  "artURL": "/a",
+  "port": 80
+}

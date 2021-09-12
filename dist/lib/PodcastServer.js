@@ -1,19 +1,19 @@
-import express = require("express");
-import path = require("path");
-import PodcastCompiler from "./PodcastCompiler";
-
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+const express = require("express");
+const path = require("path");
+const PodcastCompiler_1 = __importDefault(require("./PodcastCompiler"));
 const rssFilePath = path.resolve(__dirname, "..", "podcast", "rss.xml");
 const episodePath = path.resolve(__dirname, "..", "podcast", "episodes");
 const artPath = path.resolve(__dirname, "..", "podcast");
-
 class PodcastServer {
-    router = express();
-    compiler: PodcastCompiler;
-
-    constructor(options: ServerOptions) {
+    constructor(options) {
+        this.router = express();
         const { port, host, rssURL, episodeURL, artURL } = options;
-        this.compiler = new PodcastCompiler(host, episodePath, rssURL, episodeURL, artURL);
-
+        this.compiler = new PodcastCompiler_1.default(host, episodePath, rssURL, episodeURL, artURL);
         this.router.get(rssURL, (req, res) => {
             res.sendFile(rssFilePath);
         });
@@ -27,7 +27,6 @@ class PodcastServer {
             const episodeFilePath = path.resolve(artPath, `${file}.jpg`);
             res.sendFile(episodeFilePath);
         });
-
         this.compiler.render(rssFilePath).then(() => {
             this.router.listen(port, () => {
                 console.log(`RSS server open at ${rssURL} on ${port}`);
@@ -35,13 +34,4 @@ class PodcastServer {
         });
     }
 }
-
-export default PodcastServer;
-
-export interface ServerOptions {
-    host: string;
-    rssURL: string;
-    episodeURL: string;
-    artURL: string;
-    port: number;
-}
+exports.default = PodcastServer;

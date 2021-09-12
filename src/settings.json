@@ -1,6 +1,0 @@
-{
-  "host": "http://multiversepod.com",
-  "url": "/rss",
-  "port": 80,
-  "audioPath": "episodes"
-}
