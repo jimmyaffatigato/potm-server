@@ -126,6 +126,8 @@ class PodcastCompiler {
         const itemElement = document.createElement("item");
         itemElement.appendChild(this.newTag("title", `S${season} E${episode} - ${title}`));
         itemElement.appendChild(this.newTag("itunes:title", title));
+        itemElement.appendChild(this.newTag("itunes:season", `${season}`));
+        itemElement.appendChild(this.newTag("itunes:episode", `${episode}`));
         itemElement.appendChild(this.newTag("pubDate", pubDate));
         itemElement.appendChild(this.newTag("description", formatHTML(div.innerHTML), true));
         itemElement.appendChild(this.newTag("itunes:duration", formatDuration(audioInfo.duration)));
