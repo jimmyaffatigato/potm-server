@@ -56,7 +56,7 @@ class PodcastCompiler {
             linksElement.appendChild(document.createElement("br"));
         });
 
-        const thumbnailURL = `${host}/${artURL}/s1-thumbnail.jpg`;
+        const thumbnailURL = `${host}${artURL}/s1-thumbnail.jpg`;
 
         const channelNode = document.createElement("channel");
         rssNode.appendChild(channelNode);
