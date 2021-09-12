@@ -124,13 +124,13 @@ class PodcastCompiler {
                 linksElement.appendChild(document.createElement("br"));
             });
 
-            const url = `${host}/${episodeURL}/${id}.mp3`;
+            const url = `${host}${episodeURL}/${id}.mp3`;
             const pubDate = formatPubDate(new Date(date));
             const audioFile = path.join(episodePath, `${id}.mp3`);
 
             const audioInfo = (await ffprobe(audioFile, { path: ffprobeStatic.path })).streams[0];
             const type = `${audioInfo.codec_type}/${audioInfo.codec_name}`;
-            const bytes = (await fs.stat(episodePath)).size;
+            const bytes = (await fs.stat(audioFile)).size;
 
             const itemElement = document.createElement("item");
             itemElement.appendChild(newTag("title", `S${season} E${episode} - ${title}`));

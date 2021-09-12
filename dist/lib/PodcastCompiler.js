@@ -89,12 +89,12 @@ class PodcastCompiler {
                 linksElement.appendChild(document.createTextNode(c));
                 linksElement.appendChild(document.createElement("br"));
             });
-            const url = `${host}/${episodeURL}/${id}.mp3`;
+            const url = `${host}${episodeURL}/${id}.mp3`;
             const pubDate = (0, podcast_util_1.formatPubDate)(new Date(date));
             const audioFile = path.join(episodePath, `${id}.mp3`);
             const audioInfo = (await (0, ffprobe_1.default)(audioFile, { path: ffprobe_static_1.default.path })).streams[0];
             const type = `${audioInfo.codec_type}/${audioInfo.codec_name}`;
-            const bytes = (await fs_promise_1.default.stat(episodePath)).size;
+            const bytes = (await fs_promise_1.default.stat(audioFile)).size;
             const itemElement = document.createElement("item");
             itemElement.appendChild(newTag("title", `S${season} E${episode} - ${title}`));
             itemElement.appendChild(newTag("itunes:title", title));
