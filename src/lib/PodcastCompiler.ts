@@ -1,9 +1,9 @@
+import { formatHTML, formatDuration, formatPubDate } from "./podcast-util";
 import { JSDOM } from "jsdom";
 import ffprobe from "ffprobe";
 import ffprobeStatic from "ffprobe-static";
-import path = require("path");
 import fs from "./fs-promise";
-import { formatHTML, formatDuration, formatPubDate } from "./podcast-util";
+import path = require("path");
 
 class PodcastCompiler {
     dom: JSDOM;

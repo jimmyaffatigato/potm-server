@@ -1,5 +1,5 @@
-import nodefs = require("fs");
 import { promisify } from "util";
+import nodefs = require("fs");
 
 const fs = {
     readFile: promisify(nodefs.readFile),

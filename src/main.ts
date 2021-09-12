@@ -1,6 +1,6 @@
-import PodcastServer, { ServerOptions } from "./PodcastServer";
+import fs from "./lib/fs-promise";
 import path from "path";
-import fs from "./fs-promise";
+import PodcastServer, { ServerOptions } from "./lib/PodcastServer";
 
 loadSettings(path.join(__dirname, "settings.json")).then((settings) => {
     new PodcastServer(settings);
